@@ -452,6 +452,7 @@ def endcappaultrap(uid, trap):
              f'variable eps{uid}\t\tequal {eps:e}',
              '\n# Define frequency components.']
     
+    # amplitude of RF voltage
     lines.append(f'variable oscVX{uid}\t\tequal {etaRF*(1.0-eps)*vRF:e}')
     lines.append(f'variable oscVY{uid}\t\tequal {etaRF*(1.0+eps)*vRF:e}')
     lines.append(f'variable oscVZ{uid}\t\tequal {etaRF*vRF:e}')
@@ -460,10 +461,10 @@ def endcappaultrap(uid, trap):
     lines.append(f'variable constVY{uid}\t\tequal {etaDC*(1.0+eps)*vDC:e}/(4*v_z0{uid}*v_z0{uid})')
     lines.append(f'variable constVZ{uid}\t\tequal {etaDC*vDC:e}/(4*v_z0{uid}*v_z0{uid})')
     
-    a_pnmod = 0.0
-    f_pnmod = 500e3
-    a_ammod = 0.2
-    f_ammod = 100e3
+    #a_pnmod = 0.0
+    #f_pnmod = 500e3
+    #a_ammod = 0.2
+    #f_ammod = 100e3
     
     #lines.append(f'variable phase{uid}\t\tequal "{2*np.pi*fRF+a_pnmod*2*np.pi*f_pnmod:e} * step*dt"') # phase-modulation
     lines.append(f'variable phase{uid}\t\tequal "{2*np.pi*fRF:e} * step*dt"') # no modulation
@@ -471,8 +472,7 @@ def endcappaultrap(uid, trap):
     lines.append(f'variable oscConstY{uid}\t\tequal "v_oscVY{uid}/(4*v_z0{uid}*v_z0{uid})"')
     lines.append(f'variable oscConstZ{uid}\t\tequal "v_oscVZ{uid}/(4*v_z0{uid}*v_z0{uid})"')
 
-    # Oscillating RF-field
-    
+    # Oscillating RF-field from voltageRF
     xc = f'v_oscConstX{uid} * cos(v_phase{uid}) * 2 * x'
     yc = f'v_oscConstY{uid} * cos(v_phase{uid}) * 2 * y'
     zc = f'v_oscConstZ{uid} * cos(v_phase{uid}) * 2 * 2 * -z'
@@ -481,7 +481,7 @@ def endcappaultrap(uid, trap):
     #yc = f'({1.0:e} - {a_ammod:e} * cos( {2*np.pi*f_ammod:e} *step*dt ) ) * v_oscConstY{uid} * cos(v_phase{uid}) * 2 * y'
     #zc = f'({1.0:e} - {a_ammod:e} * cos( {2*np.pi*f_ammod:e} *step*dt ) ) * v_oscConstZ{uid} * cos(v_phase{uid}) * 2 * 2 * -z'
 
-    # Constant DC-field
+    # E-field from constant voltageDC
     xdc = f'v_constVX{uid} * 2 * x'
     ydc = f'v_constVY{uid} * 2 * y'
     zdc = f'v_constVZ{uid} * 2 * 2 * -z'
