@@ -29,7 +29,7 @@
 # This lets us ensure that the source package is imported, and that its
 # version is used.
 #sys.path.insert(0, project_root)
-#import pylion
+import pylion
 
 
 # -- General configuration ---------------------------------------------
