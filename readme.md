@@ -3,6 +3,8 @@
 
 A [LAMMPS](http://lammps.sandia.gov/) wrapper for molecular dynamics simulations of trapped ions.
 
+Documentation on readthedocs [pyLIon](https://pylion.readthedocs.io/en/latest/)
+
 * Bentine2019 [https://arxiv.org/abs/1907.10514](https://arxiv.org/abs/1907.10514)
 * Trypogeorgos2013 [https://arxiv.org/abs/1310.6294](https://arxiv.org/abs/1310.6294)
 * Foot2018 [https://arxiv.org/abs/1801.00424](https://arxiv.org/abs/1801.00424)
