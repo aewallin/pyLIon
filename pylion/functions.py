@@ -398,7 +398,7 @@ def endcappaultrap(uid, trap):
     - 'voltageDC', is the DC voltage of the electrodes
     
     The trap potential in an endcap type trap with endcap distance :math:`2z_0` driven by an rf voltage :math:`V_{RF}cos(\\Omega t)` and 
-    dc voltage :math:`V_{DC}` is
+    dc voltage :math:`V_{DC}` is [Lindvall2022](https://doi.org/10.1063/5.0106633)
     
     .. math::
     
@@ -461,13 +461,7 @@ def endcappaultrap(uid, trap):
     lines.append(f'variable constVY{uid}\t\tequal {etaDC*(1.0+eps)*vDC:e}/(4*v_z0{uid}*v_z0{uid})')
     lines.append(f'variable constVZ{uid}\t\tequal {etaDC*vDC:e}/(4*v_z0{uid}*v_z0{uid})')
     
-    #a_pnmod = 0.0
-    #f_pnmod = 500e3
-    #a_ammod = 0.2
-    #f_ammod = 100e3
-    
-    #lines.append(f'variable phase{uid}\t\tequal "{2*np.pi*fRF+a_pnmod*2*np.pi*f_pnmod:e} * step*dt"') # phase-modulation
-    lines.append(f'variable phase{uid}\t\tequal "{2*np.pi*fRF:e} * step*dt"') # no modulation
+    lines.append(f'variable phase{uid}\t\tequal "{2*np.pi*fRF:e} * step*dt"') 
     lines.append(f'variable oscConstX{uid}\t\tequal "v_oscVX{uid}/(4*v_z0{uid}*v_z0{uid})"')
     lines.append(f'variable oscConstY{uid}\t\tequal "v_oscVY{uid}/(4*v_z0{uid}*v_z0{uid})"')
     lines.append(f'variable oscConstZ{uid}\t\tequal "v_oscVZ{uid}/(4*v_z0{uid}*v_z0{uid})"')
@@ -476,18 +470,11 @@ def endcappaultrap(uid, trap):
     xc = f'v_oscConstX{uid} * cos(v_phase{uid}) * 2 * x'
     yc = f'v_oscConstY{uid} * cos(v_phase{uid}) * 2 * y'
     zc = f'v_oscConstZ{uid} * cos(v_phase{uid}) * 2 * 2 * -z'
-    # Oscillating RF-field with AM modulation
-    #xc = f'({1.0:e} - {a_ammod:e} * cos( {2*np.pi*f_ammod:e} *step*dt ) ) * v_oscConstX{uid} * cos(v_phase{uid}) * 2 * x'
-    #yc = f'({1.0:e} - {a_ammod:e} * cos( {2*np.pi*f_ammod:e} *step*dt ) ) * v_oscConstY{uid} * cos(v_phase{uid}) * 2 * y'
-    #zc = f'({1.0:e} - {a_ammod:e} * cos( {2*np.pi*f_ammod:e} *step*dt ) ) * v_oscConstZ{uid} * cos(v_phase{uid}) * 2 * 2 * -z'
 
     # E-field from constant voltageDC
     xdc = f'v_constVX{uid} * 2 * x'
     ydc = f'v_constVY{uid} * 2 * y'
     zdc = f'v_constVZ{uid} * 2 * 2 * -z'
-    #lines.append(f'variable constEX{uid} atom "{xdc} "')
-    #lines.append(f'variable constEY{uid} atom "{ydc} "')
-    #lines.append(f'variable constEZ{uid} atom "{zdc} "')
     
     lines.append(f'variable oscEX{uid} atom "{xc}+{xdc} "')
     lines.append(f'variable oscEY{uid} atom "{yc}+{ydc} "')
@@ -495,7 +482,6 @@ def endcappaultrap(uid, trap):
     lines.append(f'fix {uid} all efield v_oscEX{uid} v_oscEY{uid} v_oscEZ{uid}\n') # oscillating RF E-field
 
 
-    #lines.append(f'fix {uid} all efield v_constEX{uid} v_constEY{uid} v_constEZ{uid}\n') # constant DC E-field
 
     odict.update({'code': lines})
 
@@ -555,6 +541,94 @@ def dump(uid, filename, variables, steps=10):
     lines.append(f'dump {uid} all custom {steps:d} {filename} id {names}\n')
 
     return {'code': lines}
+
+def endcap_aq(trap, ion):
+    """
+    Mathieu stability parameters ai and qi for endcap trap
+    q proportional to applied RF-voltage
+    a proportional to applied DC-voltage
+
+    :param trap: dict defining endcap paul trap
+    :param ion: dict defining trapped ion mass and´ charge
+
+    :return: tuple of (ax, ay, az), (qx, qy, qz)
+    
+    sum(ai) = 0 required by Laplace equation
+    
+    secular frequency
+        w = beta * Omega/2 
+        beta ~= sqrt( a + q^2/2 )
+    
+    stability:
+        0 < beta < 1.0
+    """
+    #etaDC, vDC, etaRF, vRF, fRF, eps, charge, m, z0
+    z0 = trap['z0']
+    etaRF = trap['etaRF']
+    etaDC = trap['etaDC']
+    eps = trap['eps']
+    vRF = trap['voltageRF']
+    vDC = trap['voltageDC']
+    fRF = trap['frequency']
+    amu = 1.66053906660e-27
+    echarge=1.60217663e-19
+
+    m = ion['mass']*amu
+    charge = ion['charge']*echarge
+    
+    qz = 2.0*etaRF*vRF*charge / (m *pow(2*np.pi*fRF*z0, 2))
+    az = -1.0*etaDC*vDC*charge*4.0 / (m *pow(2*np.pi*fRF*z0, 2))
+
+    qx = -1.0*(1.0 - eps)*qz/2.0
+    ax = (1.0-eps)*etaDC*vDC*charge*2.0 / (m *pow(2*np.pi*fRF*z0, 2))
+
+    qy = -1.0*(1.0 + eps)*qz/2.0
+    ay = (1.0+eps)*etaDC*vDC*charge*2.0 / (m *pow(2*np.pi*fRF*z0, 2))
+
+    return (ax, ay, az), (qx, qy, qz)
+
+def endcap_beta(a ,q, high_order=True):
+    """
+    
+    omega = beta * Omega / 2
+    beta ~= sqrt( a + q**2 / 2)
+    """
+    if high_order:
+        beta_sq = a
+        beta_sq += (1.0/2.0+a/2.0)*pow(q,2)
+        beta_sq += (25.0/128.0+273.0*a/512.0)*pow(q,4)
+        beta_sq += (317.0/2304.0+59525.0*a/82944.0)*pow(q,6)
+    else:
+        beta_sq = a+pow(q,2)/2.0
+
+    return np.sqrt(beta_sq)
+
+def endcap_secular(trap, ion, high_order=True):
+    """
+    Compute secular frequencies for endcap-type paul trap
+
+    Parameters
+    ----------
+    trap : dict
+        endcap-type Paul trap definition.
+    ion : dict
+        trapped ion mass and charge.
+
+    Returns
+    -------
+    f_secular : tuple(float)
+        secular frequencies (X, Y, Z)
+
+    """
+    a, q = endcap_aq( trap, ion)
+    betaX = endcap_beta(a[0], q[0], high_order)
+    betaY = endcap_beta(a[1], q[1], high_order)
+    betaZ = endcap_beta(a[2], q[2], high_order)
+    sX = betaX * trap['frequency']/2
+    sY = betaY * trap['frequency']/2
+    sZ = betaZ * trap['frequency']/2
+    
+    return sX, sY, sZ
 
 
 def trapaqtovoltage(ions, trap, a, q):
