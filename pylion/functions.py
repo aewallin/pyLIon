@@ -398,7 +398,7 @@ def endcappaultrap(uid, trap):
     - 'voltageDC', is the DC voltage of the electrodes
     
     The trap potential in an endcap type trap with endcap distance :math:`2z_0` driven by an rf voltage :math:`V_{RF}cos(\\Omega t)` and 
-    dc voltage :math:`V_{DC}` is `[Lindvall2022] <https://doi.org/10.1063/5.0106633>`_
+    dc voltage :math:`V_{DC}` is '[Lindvall2022] <https://doi.org/10.1063/5.0106633>'_
     
     .. math::
     
@@ -545,6 +545,7 @@ def dump(uid, filename, variables, steps=10):
 def endcap_aq(trap, ion):
     """
     Mathieu stability parameters :math:`a_i` and :math:`q_i` for endcap trap.
+    
     :math:`q_i` is proportional to the applied RF-voltage, and 
     :math:`a_i` proportional to the applied DC-voltage.
 
