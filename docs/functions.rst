@@ -17,6 +17,9 @@ They all return dictionaries that you can append to a ``Simulation()``.
 .. autofunction:: lasercool
 .. autofunction:: linearpaultrap
 .. autofunction:: endcappaultrap
+.. autofunction:: endcap_aq
+.. autofunction:: endcap_beta
+.. autofunction:: endcap_secular
 .. autofunction:: timeaverage
 .. autofunction:: squaresum
 .. autofunction:: dump
