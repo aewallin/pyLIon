@@ -557,8 +557,11 @@ def endcap_aq(trap, ion):
     sum(ai) = 0 required by Laplace equation
     
     secular frequency
-        w = beta * Omega/2 
-        beta ~= sqrt( a + q^2/2 )
+
+    .. math::
+    
+         \\omega_i = \\beta_i {\\Omega \\over 2} \\approx \\sqrt{a_i+{q_i^2\\over 2}} {\\Omega \\over 2}
+
     
     stability:
         0 < beta < 1.0
