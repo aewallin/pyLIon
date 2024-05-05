@@ -215,9 +215,9 @@ provided by the ``endcap_secular()`` function
 
 .. math::
 
-    \beta_{i,LO}^2 \approx a_i+{q_i^2\over 2}
+    \beta_{i,LO}^2 &\approx a_i+{q_i^2\over 2}
 
-    \beta_{i,HO}^2 = a_i + ( {1 \over 2}+ {1 \over 2}a_i)q_i^2
+    \beta_{i,HO}^2 &\approx a_i + ( {1 \over 2}+ {1 \over 2}a_i)q_i^2
                       + ( {25 \over 128}+ {273 \over 512}a_i)q_i^4
                       + ( {317 \over 2304}+ {59525 \over 82944}a_i)q_i^6
 
