@@ -188,3 +188,45 @@ In this example we define a group of ions to be rigidly connected and act like a
 The declarations should feel generally familiar by now except for the ion placement syntax.
 The ions dictionary has the additional keyword ``rigid`` set to true and we use ``placeions()`` to place the ions by hand so that we define the geometry of the rod.
 After executing the simulation, you can see an animation of the charged rod and the other ions in the cloud oscillating in the trap.
+
+
+Secular resonances of single ion in a spherical Paul trap
+---------------------------------------------------------
+
+Here we compare secular resonances from simulated single ion trajectories in an ``endcappaultrap()`` to the low-order and 
+high-order approximations in `Lindvall2022 <https://doi.org/10.1063/5.0106633>`_ "High-Accuracy Determination of Paul-Trap Stability Parameters for
+Electric-Quadrupole-Shift Prediction".
+
+The trap and ion definitions used are::
+
+  trap = {'z0': 0.86e-3/2,  'frequency': 14.424e6,
+         'voltageRF': 300.0, 'etaRF': 0.97, 'eps':5e-2,
+         'voltageDC': 0.0, 'etaDC': 0.97, }
+  ions = {'mass': 88, 'charge': 1} # a single Strontium ion
+
+where ``voltageRF`` was varied between 100 V and 300 V. Ion trajectories were simulated for 10e6 timesteps of 0.25 ns each, 
+for a total simulation time of 2.5 ms. This corresponds to
+around 1000 oscillations at the lowest secular frequencies (ca 400 kHz).
+
+The three secular resonances (two radial modes X and Y, split due to trap asymmetry ``eps``, and one axial mode Z) were
+determined from ion position trajectories by computing the power spectral density (PSD) with ``scipy.signal.welch`` and fitting
+a Lorentzian to the PSD with ``scipy.optimize.curve_fit``. Results were compared to the low-order (LO) and high-order (HO) approximations
+provided by the ``endcap_secular()`` function
+
+.. math::
+
+    \\beta_{i,LO}^2 \\approx a_i+{q_i^2\\over 2}
+
+    \\beta_{i,HO}^2 = a_i + ( {1 \\over 2}+ {1 \\over 2}a_i)q_i^2
+                      + ( {25 \\over 128}+ {273 \\over 512}a_i)q_i^4
+                      + ( {317 \\over 2304}+ {59525 \\over 82944}a_i)q_i^6
+
+.. image:: figures/endcappaultrap_secular_frequencies.png
+  :width: 800
+  :alt: Simulated secular resonances
+
+The results show that the high-order approximation agrees with simulation to better than 1%, while the low-order 
+approximation deviates from simulated results by up to 4% at high trap drive voltages.
+
+
+
