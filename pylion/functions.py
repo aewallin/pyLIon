@@ -494,7 +494,7 @@ def timeaverage(uid, steps, variables):
     """A variable in LAMMPS representing a time averaged quantity over a
     number of steps.
 
-    :param stes: number of steps to average over
+    :param steps: number of steps to average over
     :param variables: list of variables to be averaged
     """
 
@@ -564,7 +564,11 @@ def endcap_aq(trap, ion):
 
     
     stability:
-        0 < beta < 1.0
+
+    .. math::
+        
+        0 < \\beta_i < 1.0
+        
     """
     #etaDC, vDC, etaRF, vRF, fRF, eps, charge, m, z0
     z0 = trap['z0']
