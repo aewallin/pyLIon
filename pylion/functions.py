@@ -172,7 +172,7 @@ def ionneutralheating(uid, ions, rate):
 
 
 @lammps.fix
-def langevinbath(uid, temperature, dampingtime):
+def langevinbath(uid, temperature, dampingtime, seed=1337):
     """Creates a langevin bath of a given temperature.
     The langevin bath applies a damping force to each atom proportional to
     its velocity plus a stochastic, white noise force of a magnitude such
@@ -188,7 +188,7 @@ def langevinbath(uid, temperature, dampingtime):
     """
 
     lines = ['\n# Adding a langevin bath...',
-             f'fix {uid} all langevin {temperature:e} {temperature:e} {dampingtime:e} 1337\n']
+             f'fix {uid} all langevin {temperature:e} {temperature:e} {dampingtime:e} {seed:d}\n']
 
     return {'code': lines}
 
