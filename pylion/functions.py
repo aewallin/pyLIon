@@ -449,7 +449,7 @@ def endcappaultrap(uid, trap):
     
     odict['timestep'] = 1 / np.max(trap['frequency']) / 20
 
-    lines = [f'\n# Creating an Endcal Paul Trap... (fixID={uid})',
+    lines = [f'\n# Creating an Endcap Paul Trap... (fixID={uid})',
              f'variable etaRF{uid}\t\tequal {etaRF:e}',
              f'variable etaDC{uid}\t\tequal {etaDC:e}',
              f'variable z0{uid}\t\tequal {z0:e}',
