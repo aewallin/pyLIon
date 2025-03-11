@@ -396,6 +396,8 @@ def endcappaultrap(uid, trap):
     - 'frequency', rf voltage frequency, in Hz
     - 'voltageRF', is the RF voltage of the electrodes
     - 'voltageDC', is the DC voltage of the electrodes
+    - 'eps3' third-order trap nonlinearity
+    - 'eps4' fourth-order trap nonlinearity
     
     The trap potential in an endcap type trap with endcap distance :math:`2z_0` driven by an rf voltage :math:`V_{RF}cos(\\Omega t)` and 
     dc voltage :math:`V_{DC}` is '[Lindvall2022] <https://doi.org/10.1063/5.0106633>'_
@@ -442,6 +444,8 @@ def endcappaultrap(uid, trap):
     vRF = trap['voltageRF']
     vDC = trap['voltageDC']
     fRF = trap['frequency']
+    RFe3 = trap['RFeps3']
+    RFe4 = trap['RFeps4']
     
     odict['timestep'] = 1 / np.max(trap['frequency']) / 20
 
@@ -450,6 +454,8 @@ def endcappaultrap(uid, trap):
              f'variable etaDC{uid}\t\tequal {etaDC:e}',
              f'variable z0{uid}\t\tequal {z0:e}',
              f'variable eps{uid}\t\tequal {eps:e}',
+             f'variable RFe3{uid}\t\tequal {RFe3:e}',
+             f'variable RFe4{uid}\t\tequal {RFe4:e}',
              '\n# Define frequency components.']
     
     # amplitude of RF voltage
@@ -469,12 +475,12 @@ def endcappaultrap(uid, trap):
     # Oscillating RF-field from voltageRF
     xc = f'v_oscConstX{uid} * cos(v_phase{uid}) * 2 * x'
     yc = f'v_oscConstY{uid} * cos(v_phase{uid}) * 2 * y'
-    zc = f'v_oscConstZ{uid} * cos(v_phase{uid}) * 2 * 2 * -z'
+    zc = f'v_oscConstZ{uid} * cos(v_phase{uid}) * 2 * 2 * (-z)'
 
     # E-field from constant voltageDC
     xdc = f'v_constVX{uid} * 2 * x'
     ydc = f'v_constVY{uid} * 2 * y'
-    zdc = f'v_constVZ{uid} * 2 * 2 * -z'
+    zdc = f'v_constVZ{uid} * 2 * 2 * (-z) + (- 2*3*v_RFe3{uid}*z*z) + ( - 2*4*v_RFe4{uid}*z*z*z)'
     
     lines.append(f'variable oscEX{uid} atom "{xc}+{xdc} "')
     lines.append(f'variable oscEY{uid} atom "{yc}+{ydc} "')
