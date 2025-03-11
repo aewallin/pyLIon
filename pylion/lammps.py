@@ -69,7 +69,7 @@ class Variable(CfgObject):
         # otherwise it will pass anyway since the empty set is a subset of
         # any set
         vs = kwargs.get('variables', [])
-        allowed = {'id', 'x', 'y', 'z', 'vx', 'vy', 'vz'}
+        allowed = {'id', 'x', 'y', 'z', 'vx', 'vy', 'vz', 'fx', 'fy', 'fz'}
         if not set(vs).issubset(allowed):
             prefix = [item.startswith('v_') for item in vs]
             if not all(prefix):
