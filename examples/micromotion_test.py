@@ -12,19 +12,20 @@ name = Path(__file__).stem
 s = pl.Simulation(name)
 
 ions = {'mass': 88, 'charge': 1}
-positions = [[0, 0, 600e-9]] # with large static E-field, start simulation at expected equilibrium
+Ex, Ey, Ez = 0, 0, 1000
+#positions = [[0, 0, 0]] # with large static E-field, start simulation at expected equilibrium
+positions = [[0, 0, (7.61845e-9)*Ez]] # with large static E-field, start simulation at expected equilibrium
 ions = pl.placeions(ions, positions)
 s.append(ions)
 
-
-trap = {'z0': 0.86e-3/2,  'frequency': 14.4e6,
-        'voltageRF': 300, 'etaRF': 0.97, 'eps':5e-2,
+omegaRF = 14.424e6
+trap = {'z0': 0.86e-3/2,  'frequency': omegaRF,
+        'voltageRF': 280, 'etaRF': 0.97, 'eps':5e-2,
         'voltageDC': 0.0, 'etaDC': 0.97, }
 
 frf = trap['frequency']
-# 279.86,
         
-        #ltrap = pl.linearpaultrap(trap, ions, all=False)
+#ltrap = pl.linearpaultrap(trap, ions, all=False)
 #ltrap = modtrap(123, trap)
 #ltrap = endcaptrap(123, trap)
 ltrap = pl.endcappaultrap(trap)
@@ -35,24 +36,35 @@ uid=s._uids
 print(uid)
 
 # temperature, dampingtime
-Tion=1e-3
+Tion=0.5e-3
 dampingtime=1e-5
 s.append(pl.langevinbath(Tion, dampingtime))
 print('bath append')
 s.append(pl.dump('positions.txt', variables=['x', 'y', 'z']))
 s.append(pl.dump('forces.txt', variables=['fx', 'fy', 'fz']))
-vavg = pl.timeaverage(1, variables=['vx', 'vy', 'vz']) # numer of time-steps to average over
-s.append(pl.dump('secv.txt', vavg))
+#vavg = pl.timeaverage(1, variables=['vx', 'vy', 'vz']) # numer of time-steps to average over
+s.append(pl.dump('secv.txt', variables=['vx', 'vy', 'vz']))
 timestep=0.25e-9
 s.attrs['timestep'] = timestep
 
 # addiotional constant E-field
-s.append( pl.efield( 0.0, 0.0, 100.0) )
+s.append( pl.efield( 0.0, 0.0, Ez) )
 
-num_steps=1e6
+# Ex Ey Ez  <Ex2>
+# 0  0  0    448 247 391 tot 1087 (1e6 steps)
+# 2e6 steps 1077.75
+# 4e6 steps 1082.9470
+# 10e6 steps  1168.9192
+
+num_steps=1e6 # 250 sec osc.
+#num_steps=2e6
+#num_steps=4e6
+#num_steps=10e6
 #s.append(pl.evolve(1e6))
 s.append(pl.evolve(num_steps))
-s.execute()
+s.execute() # run the simulation
+
+
 
 ###############################################################################
 # End simulation
@@ -65,21 +77,12 @@ steps3 , fs = pl.readdump('forces.txt')
 
 data *= 1e9 # to nanometers
 # F = qE
+idx=0 # only one ion
+charge=1.60217663e-19
 fx, fy, fz = fs[:, idx, 0], fs[:, idx, 1], fs[:, idx, 2]
 ex,ey,ez = fx/charge, fy/charge, fz/charge # E in V/m
-
-print(steps)
-print("Timestep ",s.attrs['timestep'] )
-t = steps*s.attrs['timestep']
-timestep=s.attrs['timestep']
-#%%
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-#for idx in [0]:
-idx=0
 x, y, z = data[:, idx, 0],  data[:, idx, 1], data[:, idx, 2]
 vx, vy, vz = vels[:, idx, 0], vels[:, idx, 1], vels[:, idx, 2]
-
 kB = 1.380649e-23
 amu = 1.66053906660e-27
 mIon = 88*amu
@@ -87,7 +90,50 @@ charge=1.60217663e-19
 Tx = 0.5*mIon*np.mean(np.square(vx)) / kB
 Ty = 0.5*mIon*np.mean(np.square(vy)) / kB
 Tz = 0.5*mIon*np.mean(np.square(vz)) / kB
-print('Temperature: %.3f, %.3f, %.3f mK'%( 1e3*Tx, 1e3*Ty, 1e3*Tz ))
+#print('steps: ',steps)
+print('Temperature: %.3f, %.3f, %.3f mK, Ttot = %.4f mK'%( 1e3*Tx, 1e3*Ty, 1e3*Tz, 1e3*(Tz+Tx+Ty)/3 ))
+print('X %.3f %.3f %.3f <VX2> = %.4f'%(np.mean(x), np.mean(y), np.mean(z), np.mean(np.power(z,2)+np.power(x,2)+np.power(y,2))))
+print('V %.3f %.3f %.3f <V^2> = %.4f'%(np.mean(vx), np.mean(vy), np.mean(vz), np.mean(np.power(vz,2)+np.power(vx,2)+np.power(vy,2))))
+print('E %.3f %.3f %.3f <E^2> = %.4f'%(np.mean(ex), np.mean(ey), np.mean(ez), np.mean(np.power(ez,2)+np.power(ex,2)+np.power(ey,2))))
+print("Timestep ",s.attrs['timestep'] )
+
+# scalar stark-shift
+# dnu = - (dAlpha0/(2h)) <E**2>
+# doppler2
+# dnu/nu0 = -(1/2)( <v**2> / c**2 )
+meanE2 = np.mean(np.power(ez,2)+np.power(ex,2)+np.power(ey,2))
+meanV2 = np.mean(np.power(vz,2)+np.power(vx,2)+np.power(vy,2))
+dAlpha0 = -4.7938e-10
+h = 6.62607015e-4 
+c = 299792458.0
+srs = 444779044095486.3 
+stark = -(dAlpha0/(2*h))*meanE2
+doppler2 = -0.5*meanV2/pow(c,2)*srs
+print('omegaRF ', omegaRF,' stark ', stark, ' D2 ', doppler2, ' sum ', stark+doppler2)
+
+# Ez 1600 V/m gives roughly NRCs mean(E**2) = (9.8 kV)**2
+# omegaRF  13424000.0  stark  36.62466816058946  D2  -41.95943797229166  sum  -5.334769811702202
+# omegaRF  14124000.0  stark  44.80527445424403  D2  -46.48086380643913  sum  -1.6755893521951037
+# omegaRF  14624000.0  stark  51.44975643656373  D2  -49.860998901672865 sum  1.588757534890867
+# omegaRF  15124000.0  stark  58.71190337795795  D2  -53.16962273007236  sum  5.54228064788559
+
+# Ez 1000 V/m
+# omegaRF  15124000.0  stark  22.934622693346014  D2  -20.769884777579662  sum  2.164737915766352
+# omegaRF  14524000.0  stark  19.52748168572186   D2  -19.149889716370872  sum  0.3775919693509877
+# omegaRF  14424000.0  stark  18.99947872172026   D2  -18.886853551776113  sum  0.1126251699441454
+# omegaRF  14324000.0  stark  18.482453204129023  D2  -18.626358980013734  sum  -0.14390577588471132
+# omegaRF  14224000.0  stark  17.97607574588746   D2  -18.367074969109535  sum  -0.3909992232220745
+# omegaRF  14124000.0  stark  17.480541870701824  D2  -18.110070002315034  sum  -0.6295281316132098
+# omegaRF  13124000.0  stark  13.077941835075922  D2  -15.651666317609967  sum  -2.573724482534045
+
+t = steps*s.attrs['timestep']
+timestep=s.attrs['timestep']
+#%%
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+#for idx in [0]:
+#idx=0
+
 
 ax.plot(x, y, z)
 ax.set_xlabel('x (nm)')
@@ -114,6 +160,7 @@ plt.legend()
 # Attaching 3D axis to the figure
 import matplotlib.animation
 
+"""
 fig = plt.figure()
 ax = fig.add_subplot(projection="3d")
 ax.set_xlim((-200,200))
@@ -135,7 +182,7 @@ ball = ax.plot([], [], [],'ro')[0]
 # Creating the Animation object
 ani = matplotlib.animation.FuncAnimation(
     fig, update_frame, num_steps, fargs=(lines, ball, tail), interval=10)
-
+"""
 
 #%%
 plt.figure()
@@ -210,18 +257,23 @@ a,q=q_trap( trap['etaDC'], trap['voltageDC'],
 
 sx, sy, sz = sfreqs(trap) 
 print(sfreqs(trap))
+print(pl.endcap_aq(trap, ions))
+print(pl.endcap_secular(trap, ions))
+print(pl.endcap_secular(trap, ions, high_order=False))
+
+fx0, fy0, fz0 = pl.endcap_secular(trap, ions, high_order=False)
+
 # fit to frequencies below fRF/2
 fitidx=min(np.argwhere(fz>trap['frequency']/2))[0]
-"""
 x_f0, x_a, x_gamma = scipy.optimize.curve_fit( lorentzian, xdata = fx[0:fitidx], ydata = px[0:fitidx], 
-                                              p0=(fz[np.argmax(px)],1e-4,10e3),
+                                              p0=(fx0,1e-4,10e3),
                                               bounds=((0.5e6, 1e-6, 1e3), (2e6, 7e-1, 2e5))  , method='dogbox')[0]
 y_f0, y_a, y_gamma = scipy.optimize.curve_fit( lorentzian, xdata = fy[0:fitidx], ydata = py[0:fitidx], 
-                                              p0=(fz[np.argmax(py)],1e-4,10e3),
+                                              p0=(fy0,1e-4,10e3),
                                               bounds=((0.5e6, 1e-6, 1e3), (2e6, 7e-1, 2e5))  , method='dogbox')[0]
 z_f0, z_a, z_gamma = scipy.optimize.curve_fit( lorentzian, xdata = fz[0:fitidx], ydata = pz[0:fitidx], 
-                                              p0=(fz[np.argmax(pz)],1e-4,10e3),
-                                              bounds=((2e6, 1e-6, 1e3), (4e6, 7e-1, 2e4)) , method='dogbox')[0]
+                                              p0=(fz0,1e-4,10e3),
+                                              bounds=((1e6, 1e-6, 1e3), (4e6, 7e-1, 2e4)) , method='dogbox')[0]
 
 print('Lorentzian fit to x PSD:', x_f0, x_a, x_gamma)
 print('Lorentzian fit to y PSD:', y_f0, y_a, y_gamma)
@@ -230,7 +282,6 @@ fplot=np.linspace(100,10e6,5000)
 plt.semilogy(fplot/1e6, lorentzian(fplot, x_f0, x_a, x_gamma), label='f_x = %.1f Hz, (fit/predicted -1) = %.3g'%(x_f0,(x_f0-sx)/sx))
 plt.semilogy(fplot/1e6, lorentzian(fplot, y_f0, y_a, y_gamma), label='f_y = %.1f Hz, (fit/predicted -1) = %.3g'%(y_f0,(y_f0-sy)/sy))
 plt.semilogy(fplot/1e6, lorentzian(fplot, z_f0, z_a, z_gamma), label='f_z = %.1f Hz, (fit/predicted -1) = %.3g'%(z_f0,(z_f0-sz)/sz))
-"""
 
 plt.semilogy([sx/1e6, sx/1e6], [1e-7, 2e-1],'--', label='predicted f_x = %.1f Hz'%sx)
 plt.semilogy([sy/1e6, sy/1e6], [1e-7, 2e-1],'--', label='predicted f_y = %.1f Hz'%sy)
@@ -249,26 +300,35 @@ plt.figure()
 #ax = fig.add_subplot(111, projection='3d')
 #   kB T = (1/2) m v**2
 
-plt.subplot(3,1,1)
-plt.plot(t, vx, label='V_x, T_x = %.4g K'%Tx)
+plt.subplot(4,1,1)
+plt.plot(t, vx, label='V_x, T_x = %.6f mK'%(1e3*Tx))
 plt.grid()
 plt.legend()
 plt.ylabel('v_x')
 
 
-plt.subplot(3,1,2)
-plt.plot(t, vy, label='V_y, T_y = %.4g K'%Ty)
+plt.subplot(4,1,2)
+plt.plot(t, vy, label='V_y, T_y = %.6f mK'%(1e3*Ty))
 plt.grid()
 plt.legend()
 plt.ylabel('v_y')
 
 
-plt.subplot(3,1,3)
-plt.plot(t, vz, label='V_z, T_z = %.4g K'%Tz)
+plt.subplot(4,1,3)
+plt.plot(t, vz, label='V_z, T_z = %.6f mK'%(1e3*Tz))
 plt.ylabel('v_z')
 plt.xlabel('Time / s')
 plt.grid()
 plt.legend()
+
+plt.subplot(4,1,4)
+Ti = (mIon/(2.0*3.0*kB))*(pow(vx,2)+pow(vy,2)+pow(vz,2))
+plt.plot(t, Ti, label=' T_mean = %.6f mK'%(1e3*np.mean(Ti)))
+plt.ylabel('Tion')
+plt.xlabel('Time / s')
+plt.grid()
+plt.legend()
+
 
 #%%
 plt.figure()

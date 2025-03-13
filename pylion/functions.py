@@ -386,7 +386,7 @@ def linearpaultrap(uid, trap, ions=None, all=True):
 
 @lammps.fix
 def endcappaultrap(uid, trap):
-    """ Endcap type ion trap with cylindrical symmetry. 
+    """ Endcap type ion trap with cylindrical symmetry.
     'trap' shoud be a dictionary with the following items:
 
     - 'z0', endcap distance is 2*z0, in meters
@@ -396,43 +396,42 @@ def endcappaultrap(uid, trap):
     - 'frequency', rf voltage frequency, in Hz
     - 'voltageRF', is the RF voltage of the electrodes
     - 'voltageDC', is the DC voltage of the electrodes
-    - 'eps3' third-order trap nonlinearity
-    - 'eps4' fourth-order trap nonlinearity
-    
+    - 'RFeps3' third-order trap nonlinearity
+    - 'RFeps4' fourth-order trap nonlinearity
+
     The trap potential in an endcap type trap with endcap distance :math:`2z_0` driven by an rf voltage :math:`V_{RF}cos(\\Omega t)` and 
     dc voltage :math:`V_{DC}` is '[Lindvall2022] <https://doi.org/10.1063/5.0106633>'_
-    
+
     .. math::
-    
+
         \\phi(x, y, z)= {\\eta_{DC}V_{DC} + \\eta_{RF}V_{RF}cos(\\Omega t) \\over 4z_0^2 }((1-\\epsilon)x^2+(1+\\epsilon)y^2-2z^2),
-    
+
     where :math:`\\epsilon \\ll 1` breaks the radial symmetry, and :math:`\\eta_{RF}, \\eta_{DC}\\approx 1` are efficiency parameters.
-    The stability parameters are (:math:`Q` and :math:`m` are the charge and mass of the trapped ion) 
-    
+    The stability parameters are (:math:`Q` and :math:`m` are the charge and mass of the trapped ion)
+
     .. math::
-    
+
         q_z = {2\\eta_{RF} V_{RF} Q \\over m \\Omega^2 z_0^2 }, a_z = -{4\\eta_{DC} V_{DC} Q \\over m \\Omega^2 z_0^2 }
-    
+
         q_x = -(1 - \\epsilon){q_z \\over 2}, a_x = -(1 - \\epsilon){a_z \\over 2 }
 
         q_y = -(1 + \\epsilon){q_z \\over 2}, a_y = -(1 + \\epsilon){a_z \\over 2 }
-    
-    The secular frequencies (for each axis :math:`i=x, y, z`) are 
-    
+
+    The secular frequencies (for each axis :math:`i=x, y, z`) are
+
     .. math::
-    
+
          \\omega_i = \\beta_i {\\Omega \\over 2}
-         
+
     With a low order approximation :math:`\\beta_i \\approx \\sqrt{a_i+{q_i^2\\over 2}}`, valid when :math:`a_i \\ll q_i^2 \\ll 1`.
     A higher order approximation is
-    
+
     .. math::
-    
+
          \\beta_i^2 = a_i + ( {1 \\over 2}+ {1 \\over 2}a_i)q_i^2
                           + ( {25 \\over 128}+ {273 \\over 512}a_i)q_i^4
                           + ( {317 \\over 2304}+ {59525 \\over 82944}a_i)q_i^6
-    
-        
+
     :param trap: dictionary containing trap parameters
     """
     odict = {}
@@ -444,9 +443,9 @@ def endcappaultrap(uid, trap):
     vRF = trap['voltageRF']
     vDC = trap['voltageDC']
     fRF = trap['frequency']
-    RFe3 = trap['RFeps3']
-    RFe4 = trap['RFeps4']
-    
+    RFeps3 = trap['RFeps3']
+    RFeps4 = trap['RFeps4']
+
     odict['timestep'] = 1 / np.max(trap['frequency']) / 20
 
     lines = [f'\n# Creating an Endcap Paul Trap... (fixID={uid})',
@@ -457,7 +456,7 @@ def endcappaultrap(uid, trap):
              f'variable RFe3{uid}\t\tequal {RFe3:e}',
              f'variable RFe4{uid}\t\tequal {RFe4:e}',
              '\n# Define frequency components.']
-    
+
     # amplitude of RF voltage
     lines.append(f'variable oscVX{uid}\t\tequal {etaRF*(1.0-eps)*vRF:e}')
     lines.append(f'variable oscVY{uid}\t\tequal {etaRF*(1.0+eps)*vRF:e}')
@@ -466,8 +465,8 @@ def endcappaultrap(uid, trap):
     lines.append(f'variable constVX{uid}\t\tequal {etaDC*(1.0-eps)*vDC:e}/(4*v_z0{uid}*v_z0{uid})')
     lines.append(f'variable constVY{uid}\t\tequal {etaDC*(1.0+eps)*vDC:e}/(4*v_z0{uid}*v_z0{uid})')
     lines.append(f'variable constVZ{uid}\t\tequal {etaDC*vDC:e}/(4*v_z0{uid}*v_z0{uid})')
-    
-    lines.append(f'variable phase{uid}\t\tequal "{2*np.pi*fRF:e} * step*dt"') 
+
+    lines.append(f'variable phase{uid}\t\tequal "{2*np.pi*fRF:e} * step*dt"')
     lines.append(f'variable oscConstX{uid}\t\tequal "v_oscVX{uid}/(4*v_z0{uid}*v_z0{uid})"')
     lines.append(f'variable oscConstY{uid}\t\tequal "v_oscVY{uid}/(4*v_z0{uid}*v_z0{uid})"')
     lines.append(f'variable oscConstZ{uid}\t\tequal "v_oscVZ{uid}/(4*v_z0{uid}*v_z0{uid})"')
@@ -475,25 +474,23 @@ def endcappaultrap(uid, trap):
     # Oscillating RF-field from voltageRF
     xc = f'v_oscConstX{uid} * cos(v_phase{uid}) * 2 * x'
     yc = f'v_oscConstY{uid} * cos(v_phase{uid}) * 2 * y'
-    zc = f'v_oscConstZ{uid} * cos(v_phase{uid}) * 2 * 2 * (-z)'
+    zc = f'v_oscConstZ{uid} * cos(v_phase{uid}) * 2 * (2 * (-z) + (-3*v_RFeps3{uid}*z*z) + (-4*v_RFeps4{uid}*z*z*z))'
 
     # E-field from constant voltageDC
     xdc = f'v_constVX{uid} * 2 * x'
     ydc = f'v_constVY{uid} * 2 * y'
-    zdc = f'v_constVZ{uid} * 2 * 2 * (-z) + (- 2*3*v_RFe3{uid}*z*z) + ( - 2*4*v_RFe4{uid}*z*z*z)'
-    
+    zdc = f'v_constVZ{uid} * 2 * 2 * (-z)'
+
     lines.append(f'variable oscEX{uid} atom "{xc}+{xdc} "')
     lines.append(f'variable oscEY{uid} atom "{yc}+{ydc} "')
     lines.append(f'variable oscEZ{uid} atom "{zc}+{zdc} "')
     lines.append(f'fix {uid} all efield v_oscEX{uid} v_oscEY{uid} v_oscEZ{uid}\n') # oscillating RF E-field
 
-
-
     odict.update({'code': lines})
 
 
     return odict
-    
+
 
 @lammps.variable('fix')
 def timeaverage(uid, steps, variables):

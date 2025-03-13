@@ -75,11 +75,13 @@ def save_atttributes_and_files(func):
 
 
 def _savescriptsource(h5file, script):
+    pass
+    """
     with h5py.File(h5file, 'a') as f:
         with open(script, 'rb') as pf:
             lines = pf.readlines()
             f.create_dataset(script, data=lines)
-
+    """
 
 def _savecallersource(h5file):
     # inspect the first four frames of the stack to find the correct
