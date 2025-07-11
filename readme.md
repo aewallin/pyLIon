@@ -5,9 +5,10 @@ A [LAMMPS](http://lammps.sandia.gov/) wrapper for molecular dynamics simulations
 
 Documentation on readthedocs [pyLIon](https://pylion.readthedocs.io/en/latest/)
 
+* [Lindvall2022](https://arxiv.org/abs/2209.02290), "High-Accuracy Determination of Paul-Trap Stability Parameters for Electric-Quadrupole-Shift Prediction" - example simulations verify the relation between secular frequencies and Mathieu (q,a) parameters in a spherical single-ion trap.
 *  [Bentine2019](https://arxiv.org/abs/1907.10514), "(py)LIon: a package for simulating trapped ion trajectories"
+*  [Foot2018](https://arxiv.org/abs/1801.00424), "Two-frequency operation of a Paul trap to optimise confinement of two species of ions"
 * [Trypogeorgos2013](https://arxiv.org/abs/1310.6294), "Co-trapping different species in ion traps using multiple radio-frequencies"
-* Foot2018 [https://arxiv.org/abs/1801.00424](https://arxiv.org/abs/1801.00424)
 
 ## Installation
 
