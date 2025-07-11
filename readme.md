@@ -6,7 +6,7 @@ A [LAMMPS](http://lammps.sandia.gov/) wrapper for molecular dynamics simulations
 Documentation on readthedocs [pyLIon](https://pylion.readthedocs.io/en/latest/)
 
 *  [Bentine2019](https://arxiv.org/abs/1907.10514), "(py)LIon: a package for simulating trapped ion trajectories"
-* Trypogeorgos2013 [https://arxiv.org/abs/1310.6294](https://arxiv.org/abs/1310.6294)
+* [Trypogeorgos2013](https://arxiv.org/abs/1310.6294), "Co-trapping different species in ion traps using multiple radio-frequencies"
 * Foot2018 [https://arxiv.org/abs/1801.00424](https://arxiv.org/abs/1801.00424)
 
 ## Installation
