@@ -211,7 +211,7 @@ around 1000 oscillations at the lowest secular frequencies (ca 400 kHz).
 The three secular resonances (two radial modes X and Y, split due to trap asymmetry ``eps``, and one axial mode Z) were
 determined from ion position trajectories by computing the power spectral density (PSD) with ``scipy.signal.welch`` and fitting
 a Lorentzian to the PSD with ``scipy.optimize.curve_fit``. Results were compared to the low-order (:math:`\beta_{i,LO}`) and 
-high-order (:math:`\beta_{i,LO}`) approximations
+high-order (:math:`\beta_{i,HO}`) approximations
 provided by the ``endcap_secular()`` function
 
 .. math::
