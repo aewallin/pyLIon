@@ -559,18 +559,16 @@ def endcap_aq(trap, ion):
     
     sum(ai) = 0 required by Laplace equation
     
-    secular frequency
 
     .. math::
-    
-         \\omega_i = \\beta_i {\\Omega \\over 2} \\approx \\sqrt{a_i+{q_i^2\\over 2}} {\\Omega \\over 2}
 
-    
-    stability:
+        q_z = {2\\eta_{RF} V_{RF} Q \\over m \\Omega^2 z_0^2 }, a_z = -{4\\eta_{DC} V_{DC} Q \\over m \\Omega^2 z_0^2 }
 
-    .. math::
-        
-        0 < \\beta_i < 1.0
+        q_x = -(1 - \\epsilon){q_z \\over 2}, a_x = -(1 - \\epsilon){a_z \\over 2 }
+
+        q_y = -(1 + \\epsilon){q_z \\over 2}, a_y = -(1 + \\epsilon){a_z \\over 2 }
+    
+
         
     """
     #etaDC, vDC, etaRF, vRF, fRF, eps, charge, m, z0
@@ -616,6 +614,21 @@ def endcap_beta(a ,q, high_order=True):
     float
         Beta corresponding to input a, q.
 
+    High order approximation:
+    
+    .. math::
+
+         \\beta_{i,HO}^2 = a_i + ( {1 \\over 2}+ {1 \\over 2}a_i)q_i^2
+                          + ( {25 \\over 128}+ {273 \\over 512}a_i)q_i^4
+                          + ( {317 \\over 2304}+ {59525 \\over 82944}a_i)q_i^6
+    
+    Low order approximation:
+    
+    .. math::
+
+         \\beta_{i,LO}^2 = a_i +  {q_i^2 \\over 2}
+
+    
     """
     if high_order:
         beta_sq = a
@@ -637,12 +650,18 @@ def endcap_secular(trap, ion, high_order=True):
         endcap-type Paul trap definition.
     ion : dict
         trapped ion mass and charge.
-
+    high_order : bool, optional
+        Use high-order approximation. The default is True.
+        
     Returns
     -------
     f_secular : tuple(float)
         secular frequencies (X, Y, Z)
 
+    .. math::
+
+         \\omega_i = \\beta_i {\\Omega \\over 2}
+         
     """
     a, q = endcap_aq( trap, ion)
     betaX = endcap_beta(a[0], q[0], high_order)

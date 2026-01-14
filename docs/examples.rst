@@ -190,8 +190,8 @@ The ions dictionary has the additional keyword ``rigid`` set to true and we use 
 After executing the simulation, you can see an animation of the charged rod and the other ions in the cloud oscillating in the trap.
 
 
-Secular resonances of single ion in a spherical Paul trap
----------------------------------------------------------
+Secular resonances of a single ion in a spherical Paul trap
+-----------------------------------------------------------
 
 Here we compare secular resonances from simulated single ion trajectories in an ``endcappaultrap()`` to the low-order and 
 high-order approximations in `Lindvall2022 <https://doi.org/10.1063/5.0106633>`_ "High-Accuracy Determination of Paul-Trap Stability Parameters for
@@ -211,7 +211,7 @@ around 1000 oscillations at the lowest secular frequencies (ca 400 kHz).
 The three secular resonances (two radial modes X and Y, split due to trap asymmetry ``eps``, and one axial mode Z) were
 determined from ion position trajectories by computing the power spectral density (PSD) with ``scipy.signal.welch`` and fitting
 a Lorentzian to the PSD with ``scipy.optimize.curve_fit``. Results were compared to the low-order (:math:`\beta_{i,LO}`) and 
-high-order (:math:`\beta_{i,LO}`) approximations
+high-order (:math:`\beta_{i,HO}`) approximations
 provided by the ``endcap_secular()`` function
 
 .. math::
@@ -229,5 +229,31 @@ provided by the ``endcap_secular()`` function
 The results show that the high-order approximation agrees with simulation to better than 1%, while the low-order 
 approximation deviates from simulated results by up to 4% at high trap drive voltages.
 
+
+Excess micromotion of a single ion in a spherical Paul trap
+-----------------------------------------------------------
+
+When determining the differential static scalar polarizability (DSSP) for ions with a negative DSSP using the magic-RF frequency method
+(`Dube2014 <https://doi.org/10.1103/PhysRevLett.112.173002>`_,
+`Huang2019 <https://doi.org/10.1103/PhysRevA.99.011401>`_,
+`Lindvall2025 <https://doi.org/10.1103/52by-28mr>`_),
+knowing the relative strength of the oscillating electric field at harmonics of the trap drive frequency :math:`\Omega` seen by the ion (or the ion velocity) is essential.
+
+Dube2014, Huang2019 used an approximation to second order in :math:`\Omega`:
+
+.. math::
+
+    \rho_{2,i}^* = { \left< E_i^2(2\Omega) \right> \over \left< E_i^2(\Omega) \right> }
+     = \left( { 4 q_i \over a_i-16 } \right)^2
+
+while a third-order solution is used in Lindvall2025:
+
+.. math::
+
+    \rho_{2,i} &= { \left< E_i^2(2\Omega) \right> \over \left< E_i^2(\Omega) \right> }
+     = \left( { 4 q_i \over (a_i-16)-q_i^2/(a_i-36) } \right)^2
+
+    \rho_{3,i} &= { \left< E_i^2(3\Omega) \right> \over \left< E_i^2(\Omega) \right> }
+     = \left( { 9 q_i^2 \over (a_i-36)(a_i-16)-q_i^2 } \right)^2
 
 
