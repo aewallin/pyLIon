@@ -443,8 +443,15 @@ def endcappaultrap(uid, trap):
     vRF = trap['voltageRF']
     vDC = trap['voltageDC']
     fRF = trap['frequency']
-    RFeps3 = trap['RFeps3']
-    RFeps4 = trap['RFeps4']
+    if 'RFeps3' in trap:
+        RFeps3 = trap['RFeps3']
+    else:
+        RFeps3 = 0.0
+        
+    if 'RFeps4' in trap:
+        RFeps4 = trap['RFeps4']
+    else:
+        RFeps4 = 0.0
 
     odict['timestep'] = 1 / np.max(trap['frequency']) / 20
 
@@ -453,8 +460,8 @@ def endcappaultrap(uid, trap):
              f'variable etaDC{uid}\t\tequal {etaDC:e}',
              f'variable z0{uid}\t\tequal {z0:e}',
              f'variable eps{uid}\t\tequal {eps:e}',
-             f'variable RFe3{uid}\t\tequal {RFe3:e}',
-             f'variable RFe4{uid}\t\tequal {RFe4:e}',
+             f'variable RFe3{uid}\t\tequal {RFeps3:e}',
+             f'variable RFe4{uid}\t\tequal {RFeps4:e}',
              '\n# Define frequency components.']
 
     # amplitude of RF voltage
@@ -472,14 +479,15 @@ def endcappaultrap(uid, trap):
     lines.append(f'variable oscConstZ{uid}\t\tequal "v_oscVZ{uid}/(4*v_z0{uid}*v_z0{uid})"')
 
     # Oscillating RF-field from voltageRF
-    xc = f'v_oscConstX{uid} * cos(v_phase{uid}) * 2 * x'
-    yc = f'v_oscConstY{uid} * cos(v_phase{uid}) * 2 * y'
-    zc = f'v_oscConstZ{uid} * cos(v_phase{uid}) * 2 * (2 * (-z) + (-3*v_RFeps3{uid}*z*z) + (-4*v_RFeps4{uid}*z*z*z))'
-
+    xc = f'v_oscConstX{uid} * cos(v_phase{uid}) * 2 * (-x)'
+    yc = f'v_oscConstY{uid} * cos(v_phase{uid}) * 2 * (-y)'
+    zc = f'v_oscConstZ{uid} * cos(v_phase{uid}) * 2 * (2 * z)'
+    # + (-3*v_RFe3{uid}*z*z) + (-4*v_RFe4{uid}*z*z*z))
+    
     # E-field from constant voltageDC
-    xdc = f'v_constVX{uid} * 2 * x'
-    ydc = f'v_constVY{uid} * 2 * y'
-    zdc = f'v_constVZ{uid} * 2 * 2 * (-z)'
+    xdc = f'v_constVX{uid} * 2 * (-x)'
+    ydc = f'v_constVY{uid} * 2 * (-y)'
+    zdc = f'v_constVZ{uid} * 2 * 2 * z'
 
     lines.append(f'variable oscEX{uid} atom "{xc}+{xdc} "')
     lines.append(f'variable oscEY{uid} atom "{yc}+{ydc} "')
